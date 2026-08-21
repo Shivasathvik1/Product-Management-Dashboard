@@ -8,9 +8,7 @@ export default function ProductImage({ product, className = '', alt }) {
     setFailed(false)
   }, [product?.id, product?.imageUrl])
 
-  const src =
-    product?.imageUrl ||
-    (product?.id ? getProductImageUrl(product.id) : null)
+  const src = getProductImageUrl(product?.imageUrl)
 
   if (!src || failed) {
     return (
