@@ -62,8 +62,24 @@ export const getByMinQuantity = (quantity) =>
 
 export const getAvailableProducts = () => api.get('/products/available')
 
-export const getProductImageUrl = (id) =>
-  `${API_BASE_URL}/products/${id}/image`
+export const getProductImageUrl = (imageUrl) => {
+  if (!imageUrl) return null
+
+  if (imageUrl.startsWith('http')) {
+    return imageUrl
+  }
+
+  if (imageUrl.startsWith('/uploads/')) {
+    const backendUrl = API_BASE_URL.replace('/api', '')
+    return `${backendUrl}${imageUrl}`
+  }
+
+  if (imageUrl.startsWith('/product-images/')) {
+    return imageUrl
+  }
+
+  return imageUrl
+}
 
 export const explainApiError = (error) => {
   if (error?.response) {
