@@ -27,6 +27,14 @@ export const getProductById = (id) => {
 // Product + optional image
 // =========================
 export const createProduct = (product, imageFile) => {
+  if (!imageFile) {
+    return api.post('/products', product, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+  }
+
   const formData = new FormData()
 
   formData.append(
@@ -37,9 +45,7 @@ export const createProduct = (product, imageFile) => {
     )
   )
 
-  if (imageFile) {
-    formData.append('imageFile', imageFile)
-  }
+  formData.append('imageFile', imageFile)
 
   return api.post('/products', formData)
 }
@@ -48,27 +54,27 @@ export const createProduct = (product, imageFile) => {
 // UPDATE PRODUCT
 // =========================
 export const updateProduct = (id, product, imageFile) => {
-  if (imageFile) {
-    const formData = new FormData()
-
-    formData.append(
-      'product',
-      new Blob(
-        [JSON.stringify(product)],
-        { type: 'application/json' }
-      )
-    )
-
-    formData.append('imageFile', imageFile)
-
-    return api.put(`/products/${id}`, formData)
+  if (!imageFile) {
+    return api.put(`/products/${id}`, product, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
   }
 
-  return api.put(`/products/${id}`, product, {
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  })
+  const formData = new FormData()
+
+  formData.append(
+    'product',
+    new Blob(
+      [JSON.stringify(product)],
+      { type: 'application/json' }
+    )
+  )
+
+  formData.append('imageFile', imageFile)
+
+  return api.put(`/products/${id}`, formData)
 }
 
 // =========================
@@ -119,28 +125,30 @@ export const getAvailableProducts = () => {
 
 // =========================
 // PRODUCT IMAGE URL
-// Handles both old seeded images
-// and new uploaded images
+// Works locally + Vercel + Render
 // =========================
 export const getProductImageUrl = (imageUrl) => {
   if (!imageUrl) {
     return null
   }
 
-  // Full external URL
-  if (imageUrl.startsWith('http')) {
+  // Already a complete URL
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
     return imageUrl
   }
 
-  // New images uploaded through Spring Boot
+  // Images uploaded to Spring Boot
+  // Example: /uploads/12345_image.png
   if (imageUrl.startsWith('/uploads/')) {
-    return `http://localhost:8080${imageUrl}`
+    const backendUrl = API_BASE_URL.replace(/\/api\/?$/, '')
+    return `${backendUrl}${imageUrl}`
   }
 
-  // First 100 seeded images
-  // stored in React public/product-images
+  // Seeded images stored in:
+  // React -> public/product-images
+  // Example: /product-images/001-iphone-17.png
   if (imageUrl.startsWith('/product-images/')) {
-    return `http://localhost:5173${imageUrl}`
+    return imageUrl
   }
 
   return imageUrl
@@ -188,7 +196,7 @@ export const explainApiError = (error) => {
   }
 
   if (error?.request) {
-    return 'Could not connect to the Spring Boot backend. Make sure it is running on port 8080.'
+    return 'Could not connect to the backend server. Please try again.'
   }
 
   return (
