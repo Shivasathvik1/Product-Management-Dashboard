@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
 import { getProductImageUrl } from '../services/api'
 
-export default function ProductImage({ product, className = '', alt }) {
+export default function ProductImage({
+  product,
+  className = '',
+  alt
+}) {
   const [failed, setFailed] = useState(false)
 
   useEffect(() => {

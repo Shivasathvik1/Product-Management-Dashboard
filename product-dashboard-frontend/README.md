@@ -186,3 +186,11 @@ Good portfolio upgrades after the base project works:
 - Authentication with Spring Security + JWT
 - Unit/integration tests
 - Deployment
+
+
+## Frontend v2 Features
+- Light / dark theme toggle with saved preference
+- Global search bar for name, brand, category and description
+- Dropdown filter controls
+- Navbar category dropdown
+- Dedicated category pages

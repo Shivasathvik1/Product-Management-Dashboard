@@ -8,98 +8,193 @@ const api = axios.create({
   timeout: 12000
 })
 
-export const getAllProducts = () => api.get('/products')
-export const getProductById = (id) => api.get(`/products/${id}`)
+// =========================
+// GET ALL PRODUCTS
+// =========================
+export const getAllProducts = () => {
+  return api.get('/products')
+}
 
+// =========================
+// GET PRODUCT BY ID
+// =========================
+export const getProductById = (id) => {
+  return api.get(`/products/${id}`)
+}
+
+// =========================
+// CREATE PRODUCT
+// Product + optional image
+// =========================
 export const createProduct = (product, imageFile) => {
-  if (!imageFile) {
-    return api.post('/products', product, {
-      headers: { 'Content-Type': 'application/json' }
-    })
-  }
-
   const formData = new FormData()
+
   formData.append(
     'product',
-    new Blob([JSON.stringify(product)], { type: 'application/json' })
+    new Blob(
+      [JSON.stringify(product)],
+      { type: 'application/json' }
+    )
   )
-  formData.append('imageFile', imageFile)
+
+  if (imageFile) {
+    formData.append('imageFile', imageFile)
+  }
 
   return api.post('/products', formData)
 }
 
+// =========================
+// UPDATE PRODUCT
+// =========================
 export const updateProduct = (id, product, imageFile) => {
-  if (!imageFile) {
-    return api.put(`/products/${id}`, product, {
-      headers: { 'Content-Type': 'application/json' }
-    })
+  if (imageFile) {
+    const formData = new FormData()
+
+    formData.append(
+      'product',
+      new Blob(
+        [JSON.stringify(product)],
+        { type: 'application/json' }
+      )
+    )
+
+    formData.append('imageFile', imageFile)
+
+    return api.put(`/products/${id}`, formData)
   }
 
-  const formData = new FormData()
-  formData.append(
-    'product',
-    new Blob([JSON.stringify(product)], { type: 'application/json' })
-  )
-  formData.append('imageFile', imageFile)
-
-  return api.put(`/products/${id}`, formData)
+  return api.put(`/products/${id}`, product, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
 }
 
-export const deleteProduct = (id) => api.delete(`/products/${id}`)
+// =========================
+// DELETE PRODUCT
+// =========================
+export const deleteProduct = (id) => {
+  return api.delete(`/products/${id}`)
+}
 
-export const getByCategory = (category) =>
-  api.get(`/products/category/${encodeURIComponent(category)}`)
+// =========================
+// FILTER BY CATEGORY
+// =========================
+export const getByCategory = (category) => {
+  return api.get(
+    `/products/category/${encodeURIComponent(category)}`
+  )
+}
 
-export const getByBrandAndCategory = (brand, category) =>
-  api.get(
+// =========================
+// FILTER BY BRAND + CATEGORY
+// =========================
+export const getByBrandAndCategory = (brand, category) => {
+  return api.get(
     `/products/search/${encodeURIComponent(brand)}/${encodeURIComponent(category)}`
   )
+}
 
-export const getByMaxPrice = (price) => api.get(`/products/price/${price}`)
+// =========================
+// PRODUCTS BELOW PRICE
+// =========================
+export const getByMaxPrice = (price) => {
+  return api.get(`/products/price/${price}`)
+}
 
-export const getByMinQuantity = (quantity) =>
-  api.get(`/products/quantity/${quantity}`)
+// =========================
+// PRODUCTS ABOVE QUANTITY
+// =========================
+export const getByMinQuantity = (quantity) => {
+  return api.get(`/products/quantity/${quantity}`)
+}
 
-export const getAvailableProducts = () => api.get('/products/available')
+// =========================
+// AVAILABLE PRODUCTS
+// =========================
+export const getAvailableProducts = () => {
+  return api.get('/products/available')
+}
 
+// =========================
+// PRODUCT IMAGE URL
+// Handles both old seeded images
+// and new uploaded images
+// =========================
 export const getProductImageUrl = (imageUrl) => {
-  if (!imageUrl) return null
+  if (!imageUrl) {
+    return null
+  }
 
+  // Full external URL
   if (imageUrl.startsWith('http')) {
     return imageUrl
   }
 
+  // New images uploaded through Spring Boot
   if (imageUrl.startsWith('/uploads/')) {
-    const backendUrl = API_BASE_URL.replace('/api', '')
-    return `${backendUrl}${imageUrl}`
+    return `http://localhost:8080${imageUrl}`
   }
 
+  // First 100 seeded images
+  // stored in React public/product-images
   if (imageUrl.startsWith('/product-images/')) {
-    return imageUrl
+    return `http://localhost:5173${imageUrl}`
   }
 
   return imageUrl
 }
 
+// =========================
+// ERROR HANDLING
+// =========================
 export const explainApiError = (error) => {
   if (error?.response) {
     const status = error.response.status
+
     const backendMessage =
       error.response.data?.message ||
       error.response.data?.error ||
-      (typeof error.response.data === 'string' ? error.response.data : '')
+      (typeof error.response.data === 'string'
+        ? error.response.data
+        : '')
 
-    if (status === 400) return backendMessage || 'Bad request. Check the product data.'
-    if (status === 404) return backendMessage || 'Product not found.'
-    if (status >= 500) return backendMessage || 'Backend server error.'
-    return backendMessage || `Request failed with status ${status}.`
+    if (status === 400) {
+      return (
+        backendMessage ||
+        'Bad request. Please check the product data.'
+      )
+    }
+
+    if (status === 404) {
+      return (
+        backendMessage ||
+        'Product not found.'
+      )
+    }
+
+    if (status >= 500) {
+      return (
+        backendMessage ||
+        'Backend server error.'
+      )
+    }
+
+    return (
+      backendMessage ||
+      `Request failed with status ${status}.`
+    )
   }
 
   if (error?.request) {
-    return 'Could not reach the Spring Boot backend. Make sure it is running on port 8080.'
+    return 'Could not connect to the Spring Boot backend. Make sure it is running on port 8080.'
   }
 
-  return error?.message || 'Something went wrong.'
+  return (
+    error?.message ||
+    'Something went wrong.'
+  )
 }
 
 export default api
